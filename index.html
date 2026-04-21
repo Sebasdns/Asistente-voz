@@ -3,112 +3,72 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Asistente de Voz PRO</title>
+  <title>Asistente de Voz PRO - Lectura larga</title>
   <style>
     :root {
-      --bg:#0b1020;
-      --panel:#131a2e;
-      --panel2:#1a2340;
-      --text:#eef2ff;
-      --muted:#aab4d6;
-      --accent:#4f7cff;
-      --danger:#ef4444;
-      --secondary:#273252;
-      --ok:#22c55e;
-      --border:rgba(255,255,255,.08);
+      --bg:#0b1020; --panel:#131a2e; --panel2:#1a2340; --text:#eef2ff;
+      --muted:#aab4d6; --accent:#4f7cff; --danger:#ef4444; --secondary:#273252;
+      --ok:#22c55e; --border:rgba(255,255,255,.08);
     }
     * { box-sizing:border-box; }
     body {
-      margin:0;
-      font-family:Arial,sans-serif;
-      color:var(--text);
+      margin:0; font-family:Arial,sans-serif; color:var(--text);
       background:radial-gradient(circle at top,#182345 0%,var(--bg) 60%);
-      min-height:100vh;
-      padding:16px;
+      min-height:100vh; padding:16px;
     }
     .app {
-      max-width:980px;
-      margin:0 auto;
-      background:rgba(19,26,46,.92);
-      border:1px solid var(--border);
-      border-radius:24px;
-      overflow:hidden;
+      max-width:980px; margin:0 auto; background:rgba(19,26,46,.92);
+      border:1px solid var(--border); border-radius:24px; overflow:hidden;
     }
     .header,.footer { padding:20px; }
     .grid { display:grid; grid-template-columns:1fr; gap:16px; padding:0 20px 20px; }
     .card {
       background:linear-gradient(180deg,var(--panel),var(--panel2));
-      border:1px solid var(--border);
-      border-radius:20px;
-      padding:16px;
+      border:1px solid var(--border); border-radius:20px; padding:16px;
     }
     h1,h2,p { margin-top:0; }
-    .subtitle,.small { color:var(--muted); line-height:1.5; }
+    .subtitle,.small,.hint { color:var(--muted); line-height:1.5; }
     .status,.notice {
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      margin-bottom:14px;
-      line-height:1.45;
+      padding:12px 14px; border-radius:14px; border:1px solid var(--border);
+      margin-bottom:14px; line-height:1.45;
     }
     .status { background:rgba(255,255,255,.04); }
     .notice { background:rgba(34,197,94,.10); border-color:rgba(34,197,94,.35); }
     .controls { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
     button {
-      border:none;
-      background:var(--accent);
-      color:white;
-      padding:12px 16px;
-      border-radius:14px;
-      font-weight:700;
-      cursor:pointer;
+      border:none; background:var(--accent); color:white; padding:12px 16px;
+      border-radius:14px; font-weight:700; cursor:pointer;
     }
     button.secondary { background:var(--secondary); }
     button.danger { background:var(--danger); }
     button.success { background:var(--ok); color:#08120a; }
     textarea,select {
-      width:100%;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      border-radius:14px;
-      padding:12px 14px;
-      font:inherit;
-      outline:none;
+      width:100%; border:1px solid var(--border); background:rgba(255,255,255,.04);
+      color:var(--text); border-radius:14px; padding:12px 14px; font:inherit; outline:none;
     }
-    textarea { min-height:220px; resize:vertical; }
+    textarea { min-height:240px; resize:vertical; }
     .row { display:grid; grid-template-columns:1fr; gap:12px; margin:12px 0; }
-    .conversation { max-height:360px; overflow:auto; display:flex; flex-direction:column; gap:10px; }
+    .conversation { max-height:320px; overflow:auto; display:flex; flex-direction:column; gap:10px; }
     .msg {
-      padding:12px 14px;
-      border-radius:14px;
-      line-height:1.5;
-      border:1px solid var(--border);
+      padding:12px 14px; border-radius:14px; line-height:1.5; border:1px solid var(--border);
       white-space:pre-wrap;
     }
     .user { align-self:flex-end; background:rgba(79,124,255,.18); }
     .assistant { align-self:flex-start; background:rgba(255,255,255,.05); }
     .modebox { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
     .modeBtn {
-      background:rgba(255,255,255,.05);
-      border:1px solid var(--border);
-      color:var(--text);
-      padding:14px;
-      border-radius:14px;
-      font-weight:700;
+      background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--text);
+      padding:14px; border-radius:14px; font-weight:700;
     }
-    .modeBtn.active {
-      background:var(--accent);
-      border-color:transparent;
-    }
-    .hint { font-size:13px; color:var(--muted); margin-top:8px; line-height:1.45; }
+    .modeBtn.active { background:var(--accent); border-color:transparent; }
+    .meta { font-size:13px; color:var(--muted); margin-top:8px; }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="header">
       <h1>Asistente de Voz PRO</h1>
-      <p class="subtitle">Versión pensada para móvil: leer texto en voz alta, repetir, parar y, si el servicio responde, descargar un audio MP3.</p>
+      <p class="subtitle">Esta versión ya está preparada para textos largos: divide automáticamente el contenido en bloques y los lee uno tras otro.</p>
     </div>
 
     <div class="grid">
@@ -116,7 +76,7 @@
         <h2>Control</h2>
 
         <div class="notice">
-          <strong>Modo recomendado:</strong> usa <strong>📖 Leer texto</strong>. Pegas el texto y la app lo lee tal cual.
+          <strong>Ahora sí:</strong> esta versión corta el texto largo en bloques automáticamente, para que no falle la voz del navegador.
         </div>
 
         <div class="status" id="status"><strong>Estado:</strong> listo.</div>
@@ -130,6 +90,8 @@
           <button id="startBtn">🎤 Hablar</button>
           <button id="stopBtn" class="secondary">⛔ Parar</button>
           <button id="readTextBtn" class="secondary">🔊 Leer texto pegado</button>
+          <button id="pauseBtn" class="secondary">⏸️ Pausar</button>
+          <button id="resumeBtn" class="secondary">▶️ Continuar</button>
           <button id="speakLastBtn" class="secondary">🔁 Repetir última salida</button>
           <button id="downloadAudioBtn" class="success">⬇️ Descargar audio</button>
           <button id="clearBtn" class="danger">🗑️ Limpiar</button>
@@ -156,8 +118,16 @@
             <select id="rateSelect">
               <option value="0.9">Lenta</option>
               <option value="1" selected>Normal</option>
-              <option value="1.15">Un poco rápida</option>
-              <option value="1.3">Rápida</option>
+              <option value="1.12">Un poco rápida</option>
+              <option value="1.25">Rápida</option>
+            </select>
+          </div>
+          <div>
+            <label for="chunkSizeSelect">Tamaño del bloque</label>
+            <select id="chunkSizeSelect">
+              <option value="220">Muy seguro</option>
+              <option value="320" selected>Equilibrado</option>
+              <option value="420">Más largo</option>
             </select>
           </div>
         </div>
@@ -169,6 +139,7 @@
         <p class="hint" id="modeHint">
           Estás en <strong>Leer texto</strong>: aquí el texto se lee tal cual, sin responder otra cosa.
         </p>
+        <p class="meta" id="queueMeta"></p>
       </section>
 
       <section class="card">
@@ -178,7 +149,7 @@
     </div>
 
     <div class="footer">
-      <p class="small">Si la descarga de audio falla, la lectura en voz alta seguirá funcionando. La descarga depende de un servicio externo.</p>
+      <p class="small">Si la descarga de audio falla, la lectura en voz alta seguirá funcionando. Para textos muy largos, usa “Muy seguro”.</p>
     </div>
   </div>
 
@@ -191,6 +162,8 @@
     const conversation = document.getElementById('conversation');
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resumeBtn = document.getElementById('resumeBtn');
     const sendTextBtn = document.getElementById('sendTextBtn');
     const clearBtn = document.getElementById('clearBtn');
     const speakLastBtn = document.getElementById('speakLastBtn');
@@ -199,16 +172,26 @@
     const modeSelect = document.getElementById('modeSelect');
     const voiceSelect = document.getElementById('voiceSelect');
     const rateSelect = document.getElementById('rateSelect');
+    const chunkSizeSelect = document.getElementById('chunkSizeSelect');
     const readerModeBtn = document.getElementById('readerModeBtn');
     const assistantModeBtn = document.getElementById('assistantModeBtn');
     const modeHint = document.getElementById('modeHint');
+    const queueMeta = document.getElementById('queueMeta');
 
     let voices = [];
     let lastOutput = '';
     let appMode = 'reader';
+    let readingQueue = [];
+    let currentChunkIndex = 0;
+    let isReadingQueue = false;
+    let isPaused = false;
 
     function setStatus(text) {
       statusEl.innerHTML = `<strong>Estado:</strong> ${text}`;
+    }
+
+    function setQueueMeta(text='') {
+      queueMeta.textContent = text;
     }
 
     function addMessage(role, text) {
@@ -249,17 +232,74 @@
       });
     }
 
-    function speak(text) {
+    function splitIntoChunks(text, maxLen) {
+      const normalized = text
+        .replace(/\r/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/[ \t]+/g, ' ')
+        .trim();
+
+      if (normalized.length <= maxLen) return [normalized];
+
+      const paragraphs = normalized.split(/\n\n+/);
+      const chunks = [];
+
+      for (const paragraph of paragraphs) {
+        if (!paragraph.trim()) continue;
+        if (paragraph.length <= maxLen) {
+          chunks.push(paragraph.trim());
+          continue;
+        }
+
+        const sentences = paragraph.match(/[^.!?\n]+[.!?…]?/g) || [paragraph];
+        let current = '';
+
+        for (const sentenceRaw of sentences) {
+          const sentence = sentenceRaw.trim();
+          if (!sentence) continue;
+
+          if ((current + ' ' + sentence).trim().length <= maxLen) {
+            current = (current + ' ' + sentence).trim();
+          } else {
+            if (current) chunks.push(current.trim());
+
+            if (sentence.length <= maxLen) {
+              current = sentence;
+            } else {
+              let remaining = sentence;
+              while (remaining.length > maxLen) {
+                let cut = remaining.lastIndexOf(' ', maxLen);
+                if (cut < Math.floor(maxLen * 0.6)) cut = maxLen;
+                chunks.push(remaining.slice(0, cut).trim());
+                remaining = remaining.slice(cut).trim();
+              }
+              current = remaining;
+            }
+          }
+        }
+
+        if (current) chunks.push(current.trim());
+      }
+
+      return chunks.filter(Boolean);
+    }
+
+    function stopEverything() {
+      window.speechSynthesis.cancel();
+      if (recognition) recognition.stop();
+      isReadingQueue = false;
+      isPaused = false;
+      readingQueue = [];
+      currentChunkIndex = 0;
+      setQueueMeta('');
+      setStatus('detenido.');
+    }
+
+    function speakSingle(text, onEnd, onError) {
       if (!('speechSynthesis' in window)) {
         setStatus('tu navegador no soporta voz sintética.');
         return;
       }
-      if (!text || !text.trim()) {
-        setStatus('no hay texto para leer.');
-        return;
-      }
-
-      window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
       const selectedVoice = voices.find(v => v.name === voiceSelect.value);
@@ -268,11 +308,57 @@
       utterance.rate = Number(rateSelect.value || 1);
       utterance.pitch = 1;
 
-      utterance.onstart = () => setStatus('leyendo en voz alta...');
-      utterance.onend = () => setStatus('lectura terminada.');
-      utterance.onerror = () => setStatus('error al reproducir la voz.');
+      utterance.onstart = () => {
+        const total = readingQueue.length || 1;
+        const index = currentChunkIndex + 1;
+        setStatus(`leyendo bloque ${index} de ${total}...`);
+        if (readingQueue.length) setQueueMeta(`Bloque ${index}/${total}`);
+      };
+      utterance.onend = () => onEnd && onEnd();
+      utterance.onerror = () => onError && onError();
 
       window.speechSynthesis.speak(utterance);
+    }
+
+    function readQueueFromCurrent() {
+      if (!readingQueue.length || currentChunkIndex >= readingQueue.length) {
+        isReadingQueue = false;
+        isPaused = false;
+        setQueueMeta('');
+        setStatus('lectura terminada.');
+        return;
+      }
+
+      const chunk = readingQueue[currentChunkIndex];
+      speakSingle(
+        chunk,
+        () => {
+          currentChunkIndex += 1;
+          setTimeout(readQueueFromCurrent, 120);
+        },
+        () => {
+          setStatus(`error al reproducir el bloque ${currentChunkIndex + 1}. Prueba con “Muy seguro”.`);
+          isReadingQueue = false;
+        }
+      );
+    }
+
+    function speakLongText(text) {
+      const clean = text.trim();
+      if (!clean) {
+        setStatus('no hay texto para leer.');
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      isPaused = false;
+
+      const maxLen = Number(chunkSizeSelect.value || 320);
+      readingQueue = splitIntoChunks(clean, maxLen);
+      currentChunkIndex = 0;
+      isReadingQueue = true;
+      setQueueMeta(`Texto dividido en ${readingQueue.length} bloques`);
+      readQueueFromCurrent();
     }
 
     function getSimpleReply(input) {
@@ -288,7 +374,7 @@
         return `Hoy es ${now.toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}.`;
       }
       if (text.includes('ayuda') || text.includes('qué puedes hacer') || text.includes('que puedes hacer')) {
-        return 'Puedo leerte texto en voz alta, repetir la última salida o responder con reglas simples.';
+        return 'Puedo leerte textos largos por bloques, repetir la última salida o responder con reglas simples.';
       }
       return `He entendido esto: "${input}". Ahora mismo sigo siendo un prototipo simple.`;
     }
@@ -304,14 +390,9 @@
       addMessage('user', cleanInput);
 
       const mode = modeSelect.value;
-      if (mode === 'text' || mode === 'both') {
-        addMessage('assistant', cleanInput);
-      }
-      if (mode === 'voice' || mode === 'both') {
-        speak(cleanInput);
-      } else {
-        setStatus('texto preparado.');
-      }
+      if (mode === 'text' || mode === 'both') addMessage('assistant', cleanInput);
+      if (mode === 'voice' || mode === 'both') speakLongText(cleanInput);
+      else setStatus('texto preparado.');
     }
 
     function respondToUser(input) {
@@ -327,7 +408,7 @@
 
       const mode = modeSelect.value;
       if (mode === 'text' || mode === 'both') addMessage('assistant', reply);
-      if (mode === 'voice' || mode === 'both') speak(reply);
+      if (mode === 'voice' || mode === 'both') speakLongText(reply);
       else setStatus('respuesta generada.');
     }
 
@@ -379,11 +460,8 @@
         const transcript = event.results[0][0].transcript;
         textInput.value = transcript;
         setStatus(`te he entendido: "${transcript}"`);
-        if (appMode === 'reader') {
-          readRawText(transcript);
-        } else {
-          respondToUser(transcript);
-        }
+        if (appMode === 'reader') readRawText(transcript);
+        else respondToUser(transcript);
       };
     } else {
       setStatus('tu navegador no soporta reconocimiento de voz. Prueba Chrome.');
@@ -400,10 +478,22 @@
       }
     });
 
-    stopBtn.addEventListener('click', () => {
-      if (recognition) recognition.stop();
-      window.speechSynthesis.cancel();
-      setStatus('detenido.');
+    stopBtn.addEventListener('click', stopEverything);
+
+    pauseBtn.addEventListener('click', () => {
+      if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+        window.speechSynthesis.pause();
+        isPaused = true;
+        setStatus('lectura pausada.');
+      }
+    });
+
+    resumeBtn.addEventListener('click', () => {
+      if ('speechSynthesis' in window && isPaused) {
+        window.speechSynthesis.resume();
+        isPaused = false;
+        setStatus('lectura reanudada.');
+      }
     });
 
     readTextBtn.addEventListener('click', () => {
@@ -412,27 +502,21 @@
     });
 
     sendTextBtn.addEventListener('click', () => {
-      if (appMode === 'reader') {
-        readRawText(textInput.value);
-      } else {
-        respondToUser(textInput.value);
-      }
+      if (appMode === 'reader') readRawText(textInput.value);
+      else respondToUser(textInput.value);
     });
 
     clearBtn.addEventListener('click', () => {
       conversation.innerHTML = '';
       textInput.value = '';
       lastOutput = '';
-      window.speechSynthesis.cancel();
+      stopEverything();
       setStatus('historial limpiado.');
     });
 
     speakLastBtn.addEventListener('click', () => {
-      if (lastOutput) {
-        speak(lastOutput);
-      } else {
-        setStatus('todavía no hay salida para repetir.');
-      }
+      if (lastOutput) speakLongText(lastOutput);
+      else setStatus('todavía no hay salida para repetir.');
     });
 
     downloadAudioBtn.addEventListener('click', downloadAudio);
@@ -444,7 +528,7 @@
       populateVoices();
     }
 
-    addMessage('assistant', 'Asistente listo. Usa “Leer texto” para pegar cualquier contenido y escucharlo tal cual.');
+    addMessage('assistant', 'Asistente listo. Esta versión divide textos largos automáticamente para poder leerlos sin romper la voz.');
   </script>
 </body>
 </html>
