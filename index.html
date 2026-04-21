@@ -3,58 +3,93 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Asistente de Voz Móvil - Lector</title>
+  <title>Asistente de Voz PRO</title>
   <style>
-    :root{
-      --bg:#0b1020; --panel:#131a2e; --panel2:#1a2340; --text:#eef2ff;
-      --muted:#aab4d6; --accent:#4f7cff; --danger:#ef4444; --border:rgba(255,255,255,.08);
-      --ok:#22c55e; --secondary:#273252;
+    :root {
+      --bg:#0b1020;
+      --panel:#131a2e;
+      --panel2:#1a2340;
+      --text:#eef2ff;
+      --muted:#aab4d6;
+      --accent:#4f7cff;
+      --danger:#ef4444;
+      --secondary:#273252;
+      --ok:#22c55e;
+      --border:rgba(255,255,255,.08);
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family:Arial,sans-serif; color:var(--text);
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      font-family:Arial,sans-serif;
+      color:var(--text);
       background:radial-gradient(circle at top,#182345 0%,var(--bg) 60%);
-      min-height:100vh; padding:16px;
+      min-height:100vh;
+      padding:16px;
     }
-    .app{
-      max-width:980px; margin:0 auto; background:rgba(19,26,46,.92);
-      border:1px solid var(--border); border-radius:24px; overflow:hidden;
+    .app {
+      max-width:980px;
+      margin:0 auto;
+      background:rgba(19,26,46,.92);
+      border:1px solid var(--border);
+      border-radius:24px;
+      overflow:hidden;
     }
-    .header,.footer{padding:20px}
-    .grid{display:grid;grid-template-columns:1fr;gap:16px;padding:0 20px 20px}
-    .card{
+    .header,.footer { padding:20px; }
+    .grid { display:grid; grid-template-columns:1fr; gap:16px; padding:0 20px 20px; }
+    .card {
       background:linear-gradient(180deg,var(--panel),var(--panel2));
-      border:1px solid var(--border); border-radius:20px; padding:16px;
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:16px;
     }
-    h1,h2,p{margin-top:0}
-    .subtitle,.small{color:var(--muted);line-height:1.5}
-    .status,.notice{
-      padding:12px 14px;border-radius:14px;border:1px solid var(--border);margin-bottom:14px;line-height:1.45
+    h1,h2,p { margin-top:0; }
+    .subtitle,.small { color:var(--muted); line-height:1.5; }
+    .status,.notice {
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      margin-bottom:14px;
+      line-height:1.45;
     }
-    .status{background:rgba(255,255,255,.04)}
-    .notice{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35)}
-    .controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
-    button{
-      border:none;background:var(--accent);color:white;padding:12px 16px;border-radius:14px;
-      font-weight:700;cursor:pointer
+    .status { background:rgba(255,255,255,.04); }
+    .notice { background:rgba(34,197,94,.10); border-color:rgba(34,197,94,.35); }
+    .controls { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+    button {
+      border:none;
+      background:var(--accent);
+      color:white;
+      padding:12px 16px;
+      border-radius:14px;
+      font-weight:700;
+      cursor:pointer;
     }
-    button.secondary{background:var(--secondary)}
-    button.danger{background:var(--danger)}
-    button:disabled{opacity:.55;cursor:not-allowed}
-    textarea,select,input{
-      width:100%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);
-      border-radius:14px;padding:12px 14px;font:inherit;outline:none
+    button.secondary { background:var(--secondary); }
+    button.danger { background:var(--danger); }
+    button.success { background:var(--ok); color:#08120a; }
+    textarea,select {
+      width:100%;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      border-radius:14px;
+      padding:12px 14px;
+      font:inherit;
+      outline:none;
     }
-    textarea{min-height:180px;resize:vertical}
-    .row{display:grid;grid-template-columns:1fr;gap:12px;margin:12px 0}
-    .conversation{max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:10px}
-    .msg{padding:12px 14px;border-radius:14px;line-height:1.5;border:1px solid var(--border);white-space:pre-wrap}
-    .user{align-self:flex-end;background:rgba(79,124,255,.18)}
-    .assistant{align-self:flex-start;background:rgba(255,255,255,.05)}
-    .modebox{
-      display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px
+    textarea { min-height:220px; resize:vertical; }
+    .row { display:grid; grid-template-columns:1fr; gap:12px; margin:12px 0; }
+    .conversation { max-height:360px; overflow:auto; display:flex; flex-direction:column; gap:10px; }
+    .msg {
+      padding:12px 14px;
+      border-radius:14px;
+      line-height:1.5;
+      border:1px solid var(--border);
+      white-space:pre-wrap;
     }
-    .modeBtn{
+    .user { align-self:flex-end; background:rgba(79,124,255,.18); }
+    .assistant { align-self:flex-start; background:rgba(255,255,255,.05); }
+    .modebox { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+    .modeBtn {
       background:rgba(255,255,255,.05);
       border:1px solid var(--border);
       color:var(--text);
@@ -62,20 +97,18 @@
       border-radius:14px;
       font-weight:700;
     }
-    .modeBtn.active{
+    .modeBtn.active {
       background:var(--accent);
       border-color:transparent;
     }
-    .hint{
-      font-size:13px;color:var(--muted);margin-top:8px;line-height:1.45;
-    }
+    .hint { font-size:13px; color:var(--muted); margin-top:8px; line-height:1.45; }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="header">
-      <h1>Asistente de Voz Móvil</h1>
-      <p class="subtitle">Ahora tiene dos usos reales: 1) leer en voz alta cualquier texto que pegues y 2) responder con reglas simples como prototipo.</p>
+      <h1>Asistente de Voz PRO</h1>
+      <p class="subtitle">Versión pensada para móvil: leer texto en voz alta, repetir, parar y, si el servicio responde, descargar un audio MP3.</p>
     </div>
 
     <div class="grid">
@@ -83,7 +116,7 @@
         <h2>Control</h2>
 
         <div class="notice">
-          <strong>Modo recomendado para ti:</strong> usa <strong>Leer texto</strong>. Pegas cualquier texto largo y la app te lo lee directamente, sin inventarse otra respuesta.
+          <strong>Modo recomendado:</strong> usa <strong>📖 Leer texto</strong>. Pegas el texto y la app lo lee tal cual.
         </div>
 
         <div class="status" id="status"><strong>Estado:</strong> listo.</div>
@@ -95,14 +128,15 @@
 
         <div class="controls">
           <button id="startBtn">🎤 Hablar</button>
-          <button id="stopBtn" class="secondary">⏹️ Parar</button>
+          <button id="stopBtn" class="secondary">⛔ Parar</button>
           <button id="readTextBtn" class="secondary">🔊 Leer texto pegado</button>
           <button id="speakLastBtn" class="secondary">🔁 Repetir última salida</button>
+          <button id="downloadAudioBtn" class="success">⬇️ Descargar audio</button>
           <button id="clearBtn" class="danger">🗑️ Limpiar</button>
         </div>
 
         <label for="textInput">Pega aquí tu texto</label>
-        <textarea id="textInput" placeholder="Pega aquí un texto largo y pulsa 'Leer texto pegado'..."></textarea>
+        <textarea id="textInput" placeholder="Pega aquí un texto largo..."></textarea>
 
         <div class="row">
           <div>
@@ -144,7 +178,7 @@
     </div>
 
     <div class="footer">
-      <p class="small">Si quieres, la siguiente versión la hacemos con IA real. Pero esta ya te sirve para pegar textos y escucharlos en el móvil.</p>
+      <p class="small">Si la descarga de audio falla, la lectura en voz alta seguirá funcionando. La descarga depende de un servicio externo.</p>
     </div>
   </div>
 
@@ -161,6 +195,7 @@
     const clearBtn = document.getElementById('clearBtn');
     const speakLastBtn = document.getElementById('speakLastBtn');
     const readTextBtn = document.getElementById('readTextBtn');
+    const downloadAudioBtn = document.getElementById('downloadAudioBtn');
     const modeSelect = document.getElementById('modeSelect');
     const voiceSelect = document.getElementById('voiceSelect');
     const rateSelect = document.getElementById('rateSelect');
@@ -225,14 +260,18 @@
       }
 
       window.speechSynthesis.cancel();
+
       const utterance = new SpeechSynthesisUtterance(text);
       const selectedVoice = voices.find(v => v.name === voiceSelect.value);
       if (selectedVoice) utterance.voice = selectedVoice;
       utterance.lang = (selectedVoice && selectedVoice.lang) ? selectedVoice.lang : 'es-ES';
       utterance.rate = Number(rateSelect.value || 1);
       utterance.pitch = 1;
+
       utterance.onstart = () => setStatus('leyendo en voz alta...');
       utterance.onend = () => setStatus('lectura terminada.');
+      utterance.onerror = () => setStatus('error al reproducir la voz.');
+
       window.speechSynthesis.speak(utterance);
     }
 
@@ -249,7 +288,7 @@
         return `Hoy es ${now.toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}.`;
       }
       if (text.includes('ayuda') || text.includes('qué puedes hacer') || text.includes('que puedes hacer')) {
-        return 'Puedo leerte texto en voz alta o responder con reglas simples. Si quieres inteligencia real, luego me conectas a una IA.';
+        return 'Puedo leerte texto en voz alta, repetir la última salida o responder con reglas simples.';
       }
       return `He entendido esto: "${input}". Ahora mismo sigo siendo un prototipo simple.`;
     }
@@ -290,6 +329,33 @@
       if (mode === 'text' || mode === 'both') addMessage('assistant', reply);
       if (mode === 'voice' || mode === 'both') speak(reply);
       else setStatus('respuesta generada.');
+    }
+
+    async function downloadAudio() {
+      const cleanInput = textInput.value.trim();
+      if (!cleanInput) {
+        setStatus('pega un texto antes de descargar audio.');
+        return;
+      }
+
+      setStatus('intentando generar audio descargable...');
+      try {
+        const url = "https://api.streamelements.com/kappa/v2/speech?voice=es-ES-Standard-A&text=" + encodeURIComponent(cleanInput);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("fallo en el servicio");
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = objectUrl;
+        a.download = 'audio.mp3';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(objectUrl);
+        setStatus('audio descargado.');
+      } catch (e) {
+        setStatus('no se pudo descargar el audio. Prueba la lectura normal.');
+      }
     }
 
     if (recognition) {
@@ -369,6 +435,7 @@
       }
     });
 
+    downloadAudioBtn.addEventListener('click', downloadAudio);
     readerModeBtn.addEventListener('click', () => setAppMode('reader'));
     assistantModeBtn.addEventListener('click', () => setAppMode('assistant'));
 
