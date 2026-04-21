@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Asistente de Voz PRO - Fase 2.1</title>
+  <title>Asistente de Voz PRO - Fase 3 Ready</title>
   <style>
     :root {
       --bg:#0b1020; --panel:#131a2e; --panel2:#1a2340; --text:#eef2ff;
       --muted:#aab4d6; --accent:#4f7cff; --danger:#ef4444; --secondary:#273252;
-      --ok:#22c55e; --border:rgba(255,255,255,.08); --warn:#f59e0b;
+      --ok:#22c55e; --border:rgba(255,255,255,.08); --warn:#f59e0b; --info:#38bdf8;
     }
     * { box-sizing:border-box; }
     body {
@@ -17,7 +17,7 @@
       min-height:100vh; padding:16px;
     }
     .app {
-      max-width:980px; margin:0 auto; background:rgba(19,26,46,.92);
+      max-width:1100px; margin:0 auto; background:rgba(19,26,46,.92);
       border:1px solid var(--border); border-radius:24px; overflow:hidden;
     }
     .header,.footer { padding:20px; }
@@ -26,15 +26,16 @@
       background:linear-gradient(180deg,var(--panel),var(--panel2));
       border:1px solid var(--border); border-radius:20px; padding:16px;
     }
-    h1,h2,p { margin-top:0; }
+    h1,h2,h3,p { margin-top:0; }
     .subtitle,.small,.hint { color:var(--muted); line-height:1.5; }
-    .status,.notice,.warn {
+    .status,.notice,.warn,.info {
       padding:12px 14px; border-radius:14px; border:1px solid var(--border);
       margin-bottom:14px; line-height:1.45;
     }
     .status { background:rgba(255,255,255,.04); }
     .notice { background:rgba(34,197,94,.10); border-color:rgba(34,197,94,.35); }
     .warn { background:rgba(245,158,11,.10); border-color:rgba(245,158,11,.35); }
+    .info { background:rgba(56,189,248,.10); border-color:rgba(56,189,248,.35); }
     .controls { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
     button {
       border:none; background:var(--accent); color:white; padding:12px 16px;
@@ -44,6 +45,9 @@
     button.danger { background:var(--danger); }
     button.success { background:var(--ok); color:#08120a; }
     button.warnBtn { background:var(--warn); color:#241300; }
+    button.infoBtn { background:var(--info); color:#04161d; }
+    button.ghost { background:rgba(255,255,255,.05); border:1px solid var(--border); }
+    button:disabled { opacity:.55; cursor:not-allowed; }
     textarea,select,input {
       width:100%; border:1px solid var(--border); background:rgba(255,255,255,.04);
       color:var(--text); border-radius:14px; padding:12px 14px; font:inherit; outline:none;
@@ -64,94 +68,158 @@
     }
     .modeBtn.active { background:var(--accent); border-color:transparent; }
     .meta { font-size:13px; color:var(--muted); margin-top:8px; }
+    .twoCol { display:grid; grid-template-columns:1fr; gap:16px; }
+    .pill {
+      display:inline-block; padding:6px 10px; border-radius:999px;
+      background:rgba(255,255,255,.06); border:1px solid var(--border);
+      color:var(--muted); font-size:12px; margin-right:6px; margin-bottom:6px;
+    }
+    @media (min-width:900px) {
+      .twoCol { grid-template-columns:1.2fr .8fr; }
+    }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="header">
-      <h1>Asistente de Voz PRO - Fase 2.1</h1>
-      <p class="subtitle">Lectura larga por bloques + reanudar desde guardado + descargar texto en <strong>.txt</strong> y <strong>.pdf</strong>.</p>
+      <h1>Asistente de Voz PRO - Fase 3 Ready</h1>
+      <p class="subtitle">Versión preparada para el siguiente salto: exportación profesional de audio mediante backend externo, sin romper lo que ya funciona.</p>
     </div>
 
     <div class="grid">
-      <section class="card">
-        <h2>Control</h2>
+      <div class="twoCol">
+        <section class="card">
+          <h2>Control principal</h2>
 
-        <div class="notice">
-          <strong>Fase 2.1:</strong> corregida la descarga TXT para que los acentos se vean bien en el móvil.
-        </div>
-
-        <div class="warn">
-          <strong>Audio descargable:</strong> todavía no está en esta fase. El siguiente nivel sería montar exportación real a MP3/WAV.
-        </div>
-
-        <div class="status" id="status"><strong>Estado:</strong> listo.</div>
-
-        <div class="modebox">
-          <button id="readerModeBtn" class="modeBtn active">📖 Leer texto</button>
-          <button id="assistantModeBtn" class="modeBtn">🤖 Asistente</button>
-        </div>
-
-        <div class="controls">
-          <button id="startBtn">🎤 Hablar</button>
-          <button id="stopBtn" class="secondary">⛔ Parar</button>
-          <button id="readTextBtn" class="secondary">🔊 Leer texto pegado</button>
-          <button id="pauseBtn" class="secondary">⏸️ Pausar</button>
-          <button id="resumeBtn" class="secondary">▶️ Continuar</button>
-          <button id="resumeSavedBtn" class="secondary">📍 Reanudar desde guardado</button>
-          <button id="speakLastBtn" class="secondary">🔁 Repetir última salida</button>
-          <button id="downloadTxtBtn" class="success">⬇️ Descargar TXT</button>
-          <button id="downloadPdfBtn" class="warnBtn">📄 Descargar PDF</button>
-          <button id="clearBtn" class="danger">🗑️ Limpiar</button>
-        </div>
-
-        <label for="fileNameInput">Nombre del archivo</label>
-        <input id="fileNameInput" value="texto_asistente" placeholder="texto_asistente" />
-
-        <label for="textInput" style="margin-top:12px; display:block;">Pega aquí tu texto</label>
-        <textarea id="textInput" placeholder="Pega aquí un texto largo..."></textarea>
-
-        <div class="row">
-          <div>
-            <label for="modeSelect">Modo de salida</label>
-            <select id="modeSelect">
-              <option value="both">Texto + voz</option>
-              <option value="text">Solo texto</option>
-              <option value="voice">Solo voz</option>
-            </select>
+          <div class="notice">
+            <strong>Qué sí hace esta fase:</strong> mantiene lectura larga, pausa, reanudar, TXT y PDF. Además deja preparada la estructura de audio profesional.
           </div>
-          <div>
-            <label for="voiceSelect">Voz</label>
-            <select id="voiceSelect"></select>
-          </div>
-          <div>
-            <label for="rateSelect">Velocidad de lectura</label>
-            <select id="rateSelect">
-              <option value="0.9">Lenta</option>
-              <option value="1" selected>Normal</option>
-              <option value="1.12">Un poco rápida</option>
-              <option value="1.25">Rápida</option>
-            </select>
-          </div>
-          <div>
-            <label for="chunkSizeSelect">Tamaño del bloque</label>
-            <select id="chunkSizeSelect">
-              <option value="220">Muy seguro</option>
-              <option value="320" selected>Equilibrado</option>
-              <option value="420">Más largo</option>
-            </select>
-          </div>
-        </div>
 
-        <div class="controls" style="margin-top:14px;">
-          <button id="sendTextBtn">Enviar</button>
-        </div>
+          <div class="warn">
+            <strong>Honesto y claro:</strong> esta web sola no puede fabricar un MP3 profesional por sí misma. Para eso hace falta conectar un backend o API de voz. Esta versión ya deja el hueco listo para enchufarlo después.
+          </div>
 
-        <p class="hint" id="modeHint">
-          Estás en <strong>Leer texto</strong>: aquí el texto se lee tal cual, sin responder otra cosa.
-        </p>
-        <p class="meta" id="queueMeta"></p>
-      </section>
+          <div class="status" id="status"><strong>Estado:</strong> listo.</div>
+
+          <div class="modebox">
+            <button id="readerModeBtn" class="modeBtn active">📖 Leer texto</button>
+            <button id="assistantModeBtn" class="modeBtn">🤖 Asistente</button>
+          </div>
+
+          <div class="controls">
+            <button id="startBtn">🎤 Hablar</button>
+            <button id="stopBtn" class="secondary">⛔ Parar</button>
+            <button id="readTextBtn" class="secondary">🔊 Leer texto pegado</button>
+            <button id="pauseBtn" class="secondary">⏸️ Pausar</button>
+            <button id="resumeBtn" class="secondary">▶️ Continuar</button>
+            <button id="resumeSavedBtn" class="secondary">📍 Reanudar guardado</button>
+            <button id="speakLastBtn" class="secondary">🔁 Repetir salida</button>
+            <button id="downloadTxtBtn" class="success">⬇️ TXT</button>
+            <button id="downloadPdfBtn" class="warnBtn">📄 PDF</button>
+            <button id="clearBtn" class="danger">🗑️ Limpiar</button>
+          </div>
+
+          <label for="fileNameInput">Nombre del archivo</label>
+          <input id="fileNameInput" value="texto_asistente" placeholder="texto_asistente" />
+
+          <label for="textInput" style="margin-top:12px; display:block;">Pega aquí tu texto</label>
+          <textarea id="textInput" placeholder="Pega aquí un texto largo..."></textarea>
+
+          <div class="row">
+            <div>
+              <label for="modeSelect">Modo de salida</label>
+              <select id="modeSelect">
+                <option value="both">Texto + voz</option>
+                <option value="text">Solo texto</option>
+                <option value="voice">Solo voz</option>
+              </select>
+            </div>
+            <div>
+              <label for="voiceSelect">Voz del navegador</label>
+              <select id="voiceSelect"></select>
+            </div>
+            <div>
+              <label for="rateSelect">Velocidad de lectura</label>
+              <select id="rateSelect">
+                <option value="0.9">Lenta</option>
+                <option value="1" selected>Normal</option>
+                <option value="1.12">Un poco rápida</option>
+                <option value="1.25">Rápida</option>
+              </select>
+            </div>
+            <div>
+              <label for="chunkSizeSelect">Tamaño del bloque</label>
+              <select id="chunkSizeSelect">
+                <option value="220">Muy seguro</option>
+                <option value="320" selected>Equilibrado</option>
+                <option value="420">Más largo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="controls" style="margin-top:14px;">
+            <button id="sendTextBtn">Enviar</button>
+          </div>
+
+          <p class="hint" id="modeHint">
+            Estás en <strong>Leer texto</strong>: aquí el texto se lee tal cual, sin responder otra cosa.
+          </p>
+          <p class="meta" id="queueMeta"></p>
+        </section>
+
+        <section class="card">
+          <h2>Audio PRO</h2>
+
+          <div class="info">
+            Esta zona es la preparación profesional para la fase 3. Cuando tengas backend o endpoint TTS real, aquí se podrá generar y descargar MP3/WAV.
+          </div>
+
+          <label for="backendUrlInput">URL del backend TTS</label>
+          <input id="backendUrlInput" placeholder="https://tu-backend-audio.com/generate-audio" />
+
+          <div class="row">
+            <div>
+              <label for="proVoiceName">Nombre de voz pro</label>
+              <input id="proVoiceName" value="voz_es_01" placeholder="voz_es_01" />
+            </div>
+            <div>
+              <label for="audioFormatSelect">Formato de audio</label>
+              <select id="audioFormatSelect">
+                <option value="mp3">MP3</option>
+                <option value="wav">WAV</option>
+              </select>
+            </div>
+            <div>
+              <label for="proStyleSelect">Estilo de voz</label>
+              <select id="proStyleSelect">
+                <option value="neutral">Neutro</option>
+                <option value="calido">Cálido</option>
+                <option value="claro">Claro</option>
+                <option value="narracion">Narración</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button id="prepareRequestBtn" class="infoBtn">🧩 Preparar petición</button>
+            <button id="copyJsonBtn" class="ghost">📋 Copiar JSON</button>
+            <button id="generateAudioBtn" class="success">🎵 Generar audio PRO</button>
+          </div>
+
+          <div class="warn" id="audioProStatus">
+            Estado Audio PRO: todavía sin backend conectado.
+          </div>
+
+          <h3>JSON listo para backend</h3>
+          <textarea id="jsonPreview" style="min-height:180px;" readonly></textarea>
+
+          <div>
+            <span class="pill">Fase actual: frontend listo</span>
+            <span class="pill">Siguiente paso: backend</span>
+            <span class="pill">Salida futura: MP3/WAV</span>
+          </div>
+        </section>
+      </div>
 
       <section class="card">
         <h2>Conversación / salida</h2>
@@ -160,19 +228,25 @@
     </div>
 
     <div class="footer">
-      <p class="small">Cuando salgas de la página, vuelve y usa <strong>📍 Reanudar desde guardado</strong>. En móvil web es la forma más fiable.</p>
+      <p class="small">Esta versión no miente: deja todo listo para el audio profesional, pero no finge que ya existe si todavía no hay backend conectado.</p>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
-    const STORAGE_KEY = 'asistenteVozProStateFase21';
+    const STORAGE_KEY = 'asistenteVozProStateFase3Ready';
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
     const statusEl = document.getElementById('status');
     const textInput = document.getElementById('textInput');
     const fileNameInput = document.getElementById('fileNameInput');
+    const backendUrlInput = document.getElementById('backendUrlInput');
+    const proVoiceName = document.getElementById('proVoiceName');
+    const audioFormatSelect = document.getElementById('audioFormatSelect');
+    const proStyleSelect = document.getElementById('proStyleSelect');
+    const jsonPreview = document.getElementById('jsonPreview');
+    const audioProStatus = document.getElementById('audioProStatus');
     const conversation = document.getElementById('conversation');
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
@@ -185,6 +259,9 @@
     const resumeSavedBtn = document.getElementById('resumeSavedBtn');
     const downloadTxtBtn = document.getElementById('downloadTxtBtn');
     const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+    const prepareRequestBtn = document.getElementById('prepareRequestBtn');
+    const copyJsonBtn = document.getElementById('copyJsonBtn');
+    const generateAudioBtn = document.getElementById('generateAudioBtn');
     const modeSelect = document.getElementById('modeSelect');
     const voiceSelect = document.getElementById('voiceSelect');
     const rateSelect = document.getElementById('rateSelect');
@@ -226,6 +303,10 @@
       const payload = {
         text: textInput.value || '',
         fileName: fileNameInput.value || 'texto_asistente',
+        backendUrl: backendUrlInput.value || '',
+        proVoiceName: proVoiceName.value || 'voz_es_01',
+        audioFormat: audioFormatSelect.value || 'mp3',
+        proStyle: proStyleSelect.value || 'neutral',
         lastOutput,
         appMode,
         modeSelect: modeSelect.value,
@@ -247,6 +328,10 @@
         const data = JSON.parse(raw);
         textInput.value = data.text || '';
         fileNameInput.value = data.fileName || 'texto_asistente';
+        backendUrlInput.value = data.backendUrl || '';
+        proVoiceName.value = data.proVoiceName || 'voz_es_01';
+        audioFormatSelect.value = data.audioFormat || 'mp3';
+        proStyleSelect.value = data.proStyle || 'neutral';
         lastOutput = data.lastOutput || '';
         appMode = data.appMode || 'reader';
         modeSelect.value = data.modeSelect || 'both';
@@ -273,12 +358,9 @@
       const readerActive = mode === 'reader';
       readerModeBtn.classList.toggle('active', readerActive);
       assistantModeBtn.classList.toggle('active', !readerActive);
-
-      if (readerActive) {
-        modeHint.innerHTML = 'Estás en <strong>Leer texto</strong>: aquí el texto se lee tal cual, sin responder otra cosa.';
-      } else {
-        modeHint.innerHTML = 'Estás en <strong>Asistente</strong>: aquí el texto se interpreta con respuestas básicas del prototipo.';
-      }
+      modeHint.innerHTML = readerActive
+        ? 'Estás en <strong>Leer texto</strong>: aquí el texto se lee tal cual, sin responder otra cosa.'
+        : 'Estás en <strong>Asistente</strong>: aquí el texto se interpreta con respuestas básicas del prototipo.';
       saveState();
     }
 
@@ -452,7 +534,7 @@
         return `Hoy es ${now.toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}.`;
       }
       if (text.includes('ayuda') || text.includes('qué puedes hacer') || text.includes('que puedes hacer')) {
-        return 'Puedo leerte textos largos por bloques, guardar el punto por donde ibas y descargar el texto en TXT o PDF.';
+        return 'Puedo leerte textos largos, reanudar y preparar la exportación profesional de audio.';
       }
       return `He entendido esto: "${input}". Ahora mismo sigo siendo un prototipo simple.`;
     }
@@ -551,6 +633,71 @@
       setStatus(`texto descargado como ${fileName}.`);
     }
 
+    function buildAudioJson() {
+      const payload = {
+        file_name: sanitizeFileName(fileNameInput.value),
+        text: textInput.value.trim(),
+        voice: proVoiceName.value.trim() || 'voz_es_01',
+        format: audioFormatSelect.value,
+        style: proStyleSelect.value,
+        language: 'es-ES'
+      };
+      jsonPreview.value = JSON.stringify(payload, null, 2);
+      return payload;
+    }
+
+    async function copyJson() {
+      buildAudioJson();
+      try {
+        await navigator.clipboard.writeText(jsonPreview.value);
+        audioProStatus.textContent = 'Estado Audio PRO: JSON copiado.';
+      } catch (e) {
+        audioProStatus.textContent = 'Estado Audio PRO: no se pudo copiar el JSON.';
+      }
+    }
+
+    async function generateAudioPro() {
+      const payload = buildAudioJson();
+
+      if (!payload.text) {
+        audioProStatus.textContent = 'Estado Audio PRO: pega un texto antes de generar.';
+        return;
+      }
+
+      const url = backendUrlInput.value.trim();
+      if (!url) {
+        audioProStatus.textContent = 'Estado Audio PRO: todavía no hay backend conectado. La interfaz ya está lista.';
+        setStatus('audio pro preparado, pero falta conectar backend.');
+        return;
+      }
+
+      audioProStatus.textContent = 'Estado Audio PRO: intentando conectar con backend...';
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('respuesta no válida');
+        const blob = await res.blob();
+        const ext = payload.format === 'wav' ? 'wav' : 'mp3';
+        const a = document.createElement('a');
+        const objectUrl = URL.createObjectURL(blob);
+        a.href = objectUrl;
+        a.download = `${payload.file_name}.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(objectUrl);
+        audioProStatus.textContent = 'Estado Audio PRO: audio descargado correctamente.';
+        setStatus('audio profesional generado y descargado.');
+      } catch (e) {
+        audioProStatus.textContent = 'Estado Audio PRO: backend no disponible o incompatible todavía.';
+        setStatus('no se pudo generar el audio pro. Falta backend real.');
+      }
+    }
+
     if (recognition) {
       recognition.lang = 'es-ES';
       recognition.interimResults = false;
@@ -611,14 +758,9 @@
     });
 
     resumeSavedBtn.addEventListener('click', () => {
-      if (!readingQueue.length || currentChunkIndex >= readingQueue.length) {
-        loadState();
-      }
-      if (readingQueue.length && currentChunkIndex < readingQueue.length) {
-        speakLongText(textInput.value, true);
-      } else {
-        setStatus('no hay lectura guardada para reanudar.');
-      }
+      if (!readingQueue.length || currentChunkIndex >= readingQueue.length) loadState();
+      if (readingQueue.length && currentChunkIndex < readingQueue.length) speakLongText(textInput.value, true);
+      else setStatus('no hay lectura guardada para reanudar.');
     });
 
     readTextBtn.addEventListener('click', () => {
@@ -638,6 +780,7 @@
       fileNameInput.value = 'texto_asistente';
       stopEverything();
       clearSavedState();
+      buildAudioJson();
       setStatus('historial y guardado limpiados.');
     });
 
@@ -648,19 +791,21 @@
 
     downloadTxtBtn.addEventListener('click', downloadTxt);
     downloadPdfBtn.addEventListener('click', downloadPdf);
+    prepareRequestBtn.addEventListener('click', () => {
+      buildAudioJson();
+      audioProStatus.textContent = 'Estado Audio PRO: petición preparada.';
+    });
+    copyJsonBtn.addEventListener('click', copyJson);
+    generateAudioBtn.addEventListener('click', generateAudioPro);
     readerModeBtn.addEventListener('click', () => setAppMode('reader'));
     assistantModeBtn.addEventListener('click', () => setAppMode('assistant'));
 
-    textInput.addEventListener('input', saveState);
-    fileNameInput.addEventListener('input', saveState);
-    modeSelect.addEventListener('change', saveState);
-    voiceSelect.addEventListener('change', saveState);
-    rateSelect.addEventListener('change', saveState);
-    chunkSizeSelect.addEventListener('change', saveState);
+    [textInput,fileNameInput,backendUrlInput,proVoiceName,modeSelect,voiceSelect,rateSelect,chunkSizeSelect,audioFormatSelect,proStyleSelect]
+      .forEach(el => el.addEventListener('input', () => { saveState(); buildAudioJson(); }));
+    [modeSelect,voiceSelect,rateSelect,chunkSizeSelect,audioFormatSelect,proStyleSelect]
+      .forEach(el => el.addEventListener('change', () => { saveState(); buildAudioJson(); }));
 
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) saveState();
-    });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) saveState(); });
 
     if ('speechSynthesis' in window) {
       window.speechSynthesis.onvoiceschanged = populateVoices;
@@ -668,7 +813,8 @@
     }
 
     loadState();
-    addMessage('assistant', 'Asistente listo. Fase 2.1 activa: lectura larga, reanudación y descarga del texto en TXT o PDF.');
+    buildAudioJson();
+    addMessage('assistant', 'Asistente listo. Fase 3 Ready: lector estable y estructura profesional preparada para exportar audio cuando conectes backend.');
   </script>
 </body>
 </html>
