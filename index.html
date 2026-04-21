@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Asistente de Voz PRO - Lectura larga</title>
+  <title>Asistente de Voz PRO - Fase 2</title>
   <style>
     :root {
       --bg:#0b1020; --panel:#131a2e; --panel2:#1a2340; --text:#eef2ff;
       --muted:#aab4d6; --accent:#4f7cff; --danger:#ef4444; --secondary:#273252;
-      --ok:#22c55e; --border:rgba(255,255,255,.08);
+      --ok:#22c55e; --border:rgba(255,255,255,.08); --warn:#f59e0b;
     }
     * { box-sizing:border-box; }
     body {
@@ -28,12 +28,13 @@
     }
     h1,h2,p { margin-top:0; }
     .subtitle,.small,.hint { color:var(--muted); line-height:1.5; }
-    .status,.notice {
+    .status,.notice,.warn {
       padding:12px 14px; border-radius:14px; border:1px solid var(--border);
       margin-bottom:14px; line-height:1.45;
     }
     .status { background:rgba(255,255,255,.04); }
     .notice { background:rgba(34,197,94,.10); border-color:rgba(34,197,94,.35); }
+    .warn { background:rgba(245,158,11,.10); border-color:rgba(245,158,11,.35); }
     .controls { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
     button {
       border:none; background:var(--accent); color:white; padding:12px 16px;
@@ -42,7 +43,8 @@
     button.secondary { background:var(--secondary); }
     button.danger { background:var(--danger); }
     button.success { background:var(--ok); color:#08120a; }
-    textarea,select {
+    button.warnBtn { background:var(--warn); color:#241300; }
+    textarea,select,input {
       width:100%; border:1px solid var(--border); background:rgba(255,255,255,.04);
       color:var(--text); border-radius:14px; padding:12px 14px; font:inherit; outline:none;
     }
@@ -67,8 +69,8 @@
 <body>
   <div class="app">
     <div class="header">
-      <h1>Asistente de Voz PRO</h1>
-      <p class="subtitle">Esta versión ya está preparada para textos largos: divide automáticamente el contenido en bloques y los lee uno tras otro.</p>
+      <h1>Asistente de Voz PRO - Fase 2</h1>
+      <p class="subtitle">Lectura larga por bloques + reanudar desde guardado + descargar texto en <strong>.txt</strong> y <strong>.pdf</strong>.</p>
     </div>
 
     <div class="grid">
@@ -76,7 +78,11 @@
         <h2>Control</h2>
 
         <div class="notice">
-          <strong>Ahora sí:</strong> esta versión corta el texto largo en bloques automáticamente, para que no falle la voz del navegador.
+          <strong>Fase 2 activada:</strong> ya puedes leer texto largo, reanudar desde donde iba y descargar el texto que pegues.
+        </div>
+
+        <div class="warn">
+          <strong>Nota:</strong> el feedback tipo asistente avanzado o memoria compartida lo dejaría para la siguiente fase. Ahora vamos a dejar perfecto el lector y la exportación.
         </div>
 
         <div class="status" id="status"><strong>Estado:</strong> listo.</div>
@@ -92,12 +98,17 @@
           <button id="readTextBtn" class="secondary">🔊 Leer texto pegado</button>
           <button id="pauseBtn" class="secondary">⏸️ Pausar</button>
           <button id="resumeBtn" class="secondary">▶️ Continuar</button>
+          <button id="resumeSavedBtn" class="secondary">📍 Reanudar desde guardado</button>
           <button id="speakLastBtn" class="secondary">🔁 Repetir última salida</button>
-          <button id="downloadAudioBtn" class="success">⬇️ Descargar audio</button>
+          <button id="downloadTxtBtn" class="success">⬇️ Descargar TXT</button>
+          <button id="downloadPdfBtn" class="warnBtn">📄 Descargar PDF</button>
           <button id="clearBtn" class="danger">🗑️ Limpiar</button>
         </div>
 
-        <label for="textInput">Pega aquí tu texto</label>
+        <label for="fileNameInput">Nombre del archivo</label>
+        <input id="fileNameInput" value="texto_asistente" placeholder="texto_asistente" />
+
+        <label for="textInput" style="margin-top:12px; display:block;">Pega aquí tu texto</label>
         <textarea id="textInput" placeholder="Pega aquí un texto largo..."></textarea>
 
         <div class="row">
@@ -149,16 +160,19 @@
     </div>
 
     <div class="footer">
-      <p class="small">Si la descarga de audio falla, la lectura en voz alta seguirá funcionando. Para textos muy largos, usa “Muy seguro”.</p>
+      <p class="small">Cuando salgas de la página, vuelve y usa <strong>📍 Reanudar desde guardado</strong>. En móvil web es la forma más fiable.</p>
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
+    const STORAGE_KEY = 'asistenteVozProStateFase2';
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
     const statusEl = document.getElementById('status');
     const textInput = document.getElementById('textInput');
+    const fileNameInput = document.getElementById('fileNameInput');
     const conversation = document.getElementById('conversation');
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
@@ -168,7 +182,9 @@
     const clearBtn = document.getElementById('clearBtn');
     const speakLastBtn = document.getElementById('speakLastBtn');
     const readTextBtn = document.getElementById('readTextBtn');
-    const downloadAudioBtn = document.getElementById('downloadAudioBtn');
+    const resumeSavedBtn = document.getElementById('resumeSavedBtn');
+    const downloadTxtBtn = document.getElementById('downloadTxtBtn');
+    const downloadPdfBtn = document.getElementById('downloadPdfBtn');
     const modeSelect = document.getElementById('modeSelect');
     const voiceSelect = document.getElementById('voiceSelect');
     const rateSelect = document.getElementById('rateSelect');
@@ -194,12 +210,65 @@
       queueMeta.textContent = text;
     }
 
+    function sanitizeFileName(name) {
+      return (name || 'texto_asistente')
+        .trim()
+        .replace(/[\\/:*?"<>|]+/g, '_')
+        .replace(/\s+/g, '_');
+    }
+
     function addMessage(role, text) {
       const div = document.createElement('div');
       div.className = `msg ${role}`;
       div.textContent = text;
       conversation.appendChild(div);
       conversation.scrollTop = conversation.scrollHeight;
+    }
+
+    function saveState() {
+      const payload = {
+        text: textInput.value || '',
+        fileName: fileNameInput.value || 'texto_asistente',
+        lastOutput,
+        appMode,
+        modeSelect: modeSelect.value,
+        voiceSelect: voiceSelect.value,
+        rateSelect: rateSelect.value,
+        chunkSizeSelect: chunkSizeSelect.value,
+        readingQueue,
+        currentChunkIndex,
+        isReadingQueue,
+        isPaused
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        textInput.value = data.text || '';
+        fileNameInput.value = data.fileName || 'texto_asistente';
+        lastOutput = data.lastOutput || '';
+        appMode = data.appMode || 'reader';
+        modeSelect.value = data.modeSelect || 'both';
+        rateSelect.value = data.rateSelect || '1';
+        chunkSizeSelect.value = data.chunkSizeSelect || '320';
+        readingQueue = Array.isArray(data.readingQueue) ? data.readingQueue : [];
+        currentChunkIndex = Number.isInteger(data.currentChunkIndex) ? data.currentChunkIndex : 0;
+        isReadingQueue = false;
+        isPaused = false;
+        setAppMode(appMode);
+        if (readingQueue.length && currentChunkIndex < readingQueue.length) {
+          setQueueMeta(`Guardado: bloque ${currentChunkIndex + 1}/${readingQueue.length}`);
+          setStatus('hay una lectura guardada lista para reanudar.');
+        }
+      } catch (e) {}
+    }
+
+    function clearSavedState() {
+      localStorage.removeItem(STORAGE_KEY);
     }
 
     function setAppMode(mode) {
@@ -210,11 +279,10 @@
 
       if (readerActive) {
         modeHint.innerHTML = 'Estás en <strong>Leer texto</strong>: aquí el texto se lee tal cual, sin responder otra cosa.';
-        setStatus('modo lector activado.');
       } else {
         modeHint.innerHTML = 'Estás en <strong>Asistente</strong>: aquí el texto se interpreta con respuestas básicas del prototipo.';
-        setStatus('modo asistente activado.');
       }
+      saveState();
     }
 
     function populateVoices() {
@@ -230,6 +298,17 @@
         if (index === 0) option.selected = true;
         voiceSelect.appendChild(option);
       });
+
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data.voiceSelect) {
+            const exists = [...voiceSelect.options].some(o => o.value === data.voiceSelect);
+            if (exists) voiceSelect.value = data.voiceSelect;
+          }
+        }
+      } catch (e) {}
     }
 
     function splitIntoChunks(text, maxLen) {
@@ -293,6 +372,7 @@
       currentChunkIndex = 0;
       setQueueMeta('');
       setStatus('detenido.');
+      saveState();
     }
 
     function speakSingle(text, onEnd, onError) {
@@ -313,6 +393,7 @@
         const index = currentChunkIndex + 1;
         setStatus(`leyendo bloque ${index} de ${total}...`);
         if (readingQueue.length) setQueueMeta(`Bloque ${index}/${total}`);
+        saveState();
       };
       utterance.onend = () => onEnd && onEnd();
       utterance.onerror = () => onError && onError();
@@ -326,6 +407,7 @@
         isPaused = false;
         setQueueMeta('');
         setStatus('lectura terminada.');
+        saveState();
         return;
       }
 
@@ -334,16 +416,18 @@
         chunk,
         () => {
           currentChunkIndex += 1;
+          saveState();
           setTimeout(readQueueFromCurrent, 120);
         },
         () => {
-          setStatus(`error al reproducir el bloque ${currentChunkIndex + 1}. Prueba con “Muy seguro”.`);
           isReadingQueue = false;
+          setStatus(`error al reproducir el bloque ${currentChunkIndex + 1}. Usa “Muy seguro” o reanuda desde guardado.`);
+          saveState();
         }
       );
     }
 
-    function speakLongText(text) {
+    function speakLongText(text, startFromSaved=false) {
       const clean = text.trim();
       if (!clean) {
         setStatus('no hay texto para leer.');
@@ -353,11 +437,15 @@
       window.speechSynthesis.cancel();
       isPaused = false;
 
-      const maxLen = Number(chunkSizeSelect.value || 320);
-      readingQueue = splitIntoChunks(clean, maxLen);
-      currentChunkIndex = 0;
+      if (!startFromSaved) {
+        const maxLen = Number(chunkSizeSelect.value || 320);
+        readingQueue = splitIntoChunks(clean, maxLen);
+        currentChunkIndex = 0;
+      }
+
       isReadingQueue = true;
       setQueueMeta(`Texto dividido en ${readingQueue.length} bloques`);
+      saveState();
       readQueueFromCurrent();
     }
 
@@ -374,7 +462,7 @@
         return `Hoy es ${now.toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}.`;
       }
       if (text.includes('ayuda') || text.includes('qué puedes hacer') || text.includes('que puedes hacer')) {
-        return 'Puedo leerte textos largos por bloques, repetir la última salida o responder con reglas simples.';
+        return 'Puedo leerte textos largos por bloques, guardar el punto por donde ibas y descargar el texto en TXT o PDF.';
       }
       return `He entendido esto: "${input}". Ahora mismo sigo siendo un prototipo simple.`;
     }
@@ -393,6 +481,7 @@
       if (mode === 'text' || mode === 'both') addMessage('assistant', cleanInput);
       if (mode === 'voice' || mode === 'both') speakLongText(cleanInput);
       else setStatus('texto preparado.');
+      saveState();
     }
 
     function respondToUser(input) {
@@ -410,33 +499,65 @@
       if (mode === 'text' || mode === 'both') addMessage('assistant', reply);
       if (mode === 'voice' || mode === 'both') speakLongText(reply);
       else setStatus('respuesta generada.');
+      saveState();
     }
 
-    async function downloadAudio() {
+    function downloadTxt() {
       const cleanInput = textInput.value.trim();
       if (!cleanInput) {
-        setStatus('pega un texto antes de descargar audio.');
+        setStatus('pega un texto antes de descargar.');
         return;
       }
 
-      setStatus('intentando generar audio descargable...');
-      try {
-        const url = "https://api.streamelements.com/kappa/v2/speech?voice=es-ES-Standard-A&text=" + encodeURIComponent(cleanInput);
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("fallo en el servicio");
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = objectUrl;
-        a.download = 'audio.mp3';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(objectUrl);
-        setStatus('audio descargado.');
-      } catch (e) {
-        setStatus('no se pudo descargar el audio. Prueba la lectura normal.');
+      const fileName = sanitizeFileName(fileNameInput.value) + '.txt';
+      const blob = new Blob([cleanInput], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setStatus(`texto descargado como ${fileName}.`);
+    }
+
+    function downloadPdf() {
+      const cleanInput = textInput.value.trim();
+      if (!cleanInput) {
+        setStatus('pega un texto antes de descargar.');
+        return;
       }
+
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        setStatus('no se pudo cargar el generador PDF. Prueba otra vez.');
+        return;
+      }
+
+      const fileName = sanitizeFileName(fileNameInput.value) + '.pdf';
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+      const margin = 40;
+      const maxWidth = 515;
+      const lineHeight = 18;
+      let y = 50;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+
+      const lines = doc.splitTextToSize(cleanInput, maxWidth);
+      lines.forEach(line => {
+        if (y > 780) {
+          doc.addPage();
+          y = 50;
+        }
+        doc.text(line, margin, y);
+        y += lineHeight;
+      });
+
+      doc.save(fileName);
+      setStatus(`texto descargado como ${fileName}.`);
     }
 
     if (recognition) {
@@ -485,6 +606,7 @@
         window.speechSynthesis.pause();
         isPaused = true;
         setStatus('lectura pausada.');
+        saveState();
       }
     });
 
@@ -493,6 +615,18 @@
         window.speechSynthesis.resume();
         isPaused = false;
         setStatus('lectura reanudada.');
+        saveState();
+      }
+    });
+
+    resumeSavedBtn.addEventListener('click', () => {
+      if (!readingQueue.length || currentChunkIndex >= readingQueue.length) {
+        loadState();
+      }
+      if (readingQueue.length && currentChunkIndex < readingQueue.length) {
+        speakLongText(textInput.value, true);
+      } else {
+        setStatus('no hay lectura guardada para reanudar.');
       }
     });
 
@@ -510,8 +644,10 @@
       conversation.innerHTML = '';
       textInput.value = '';
       lastOutput = '';
+      fileNameInput.value = 'texto_asistente';
       stopEverything();
-      setStatus('historial limpiado.');
+      clearSavedState();
+      setStatus('historial y guardado limpiados.');
     });
 
     speakLastBtn.addEventListener('click', () => {
@@ -519,16 +655,29 @@
       else setStatus('todavía no hay salida para repetir.');
     });
 
-    downloadAudioBtn.addEventListener('click', downloadAudio);
+    downloadTxtBtn.addEventListener('click', downloadTxt);
+    downloadPdfBtn.addEventListener('click', downloadPdf);
     readerModeBtn.addEventListener('click', () => setAppMode('reader'));
     assistantModeBtn.addEventListener('click', () => setAppMode('assistant'));
+
+    textInput.addEventListener('input', saveState);
+    fileNameInput.addEventListener('input', saveState);
+    modeSelect.addEventListener('change', saveState);
+    voiceSelect.addEventListener('change', saveState);
+    rateSelect.addEventListener('change', saveState);
+    chunkSizeSelect.addEventListener('change', saveState);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) saveState();
+    });
 
     if ('speechSynthesis' in window) {
       window.speechSynthesis.onvoiceschanged = populateVoices;
       populateVoices();
     }
 
-    addMessage('assistant', 'Asistente listo. Esta versión divide textos largos automáticamente para poder leerlos sin romper la voz.');
+    loadState();
+    addMessage('assistant', 'Asistente listo. Fase 2 activa: lectura larga, reanudación y descarga del texto en TXT o PDF.');
   </script>
 </body>
 </html>
