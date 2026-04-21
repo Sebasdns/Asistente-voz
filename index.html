@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asistente de Voz Móvil</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#131a2e; --panel2:#1a2340; --text:#eef2ff;
+      --muted:#aab4d6; --accent:#4f7cff; --danger:#ef4444; --border:rgba(255,255,255,.08);
+      --warn:#f59e0b; --ok:#22c55e;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Arial,sans-serif; color:var(--text);
+      background:radial-gradient(circle at top,#182345 0%,var(--bg) 60%);
+      min-height:100vh; padding:16px;
+    }
+    .app{max-width:920px;margin:0 auto;background:rgba(19,26,46,.92);border:1px solid var(--border);border-radius:24px;overflow:hidden}
+    .header,.footer{padding:20px}
+    .grid{display:grid;grid-template-columns:1fr;gap:16px;padding:0 20px 20px}
+    .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:20px;padding:16px}
+    h1,h2,p{margin-top:0}
+    .subtitle,.small{color:var(--muted);line-height:1.5}
+    .status,.notice{padding:12px 14px;border-radius:14px;border:1px solid var(--border);margin-bottom:14px;line-height:1.45}
+    .status{background:rgba(255,255,255,.04)}
+    .notice{background:rgba(245,158,11,.10);border-color:rgba(245,158,11,.35)}
+    .okbox{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35)}
+    .controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+    button{border:none;background:var(--accent);color:white;padding:12px 16px;border-radius:14px;font-weight:700;cursor:pointer}
+    button.secondary{background:#273252}
+    button.danger{background:var(--danger)}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    textarea,select,input{width:100%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);border-radius:14px;padding:12px 14px;font:inherit;outline:none}
+    textarea{min-height:110px;resize:vertical}
+    .row{display:grid;grid-template-columns:1fr;gap:12px;margin:12px 0}
+    .conversation{max-height:420px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+    .msg{padding:12px 14px;border-radius:14px;line-height:1.5;border:1px solid var(--border);white-space:pre-wrap}
+    .user{align-self:flex-end;background:rgba(79,124,255,.18)}
+    .assistant{align-self:flex-start;background:rgba(255,255,255,.05)}
+    code{background:rgba(255,255,255,.07);padding:2px 6px;border-radius:8px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>Asistente de Voz Móvil</h1>
+      <p class="subtitle">Versión preparada para usar en el teléfono. El micrófono solo funcionará bien cuando abras esta app desde una web segura (https), no desde un archivo local.</p>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Control</h2>
+
+        <div id="httpsNotice" class="notice">
+          <strong>Aviso:</strong> si abres este archivo directamente desde el teléfono, el botón de voz puede no funcionar. Súbelo a una web segura <code>https</code>.
+        </div>
+
+        <div class="status" id="status"><strong>Estado:</strong> listo.</div>
+
+        <div class="controls">
+          <button id="startBtn">🎤 Hablar</button>
+          <button id="stopBtn" class="secondary">⏹️ Parar</button>
+          <button id="speakLastBtn" class="secondary">🔊 Repetir última respuesta</button>
+          <button id="clearBtn" class="danger">🗑️ Limpiar</button>
+        </div>
+
+        <label for="textInput">Escribe aquí si no quieres hablar</label>
+        <textarea id="textInput" placeholder="Escribe tu mensaje..."></textarea>
+
+        <div class="row">
+          <div>
+            <label for="modeSelect">Modo de respuesta</label>
+            <select id="modeSelect">
+              <option value="both">Texto + voz</option>
+              <option value="text">Solo texto</option>
+              <option value="voice">Solo voz</option>
+            </select>
+          </div>
+          <div>
+            <label for="voiceSelect">Voz</label>
+            <select id="voiceSelect"></select>
+          </div>
+        </div>
+
+        <div class="controls" style="margin-top:14px;">
+          <button id="sendTextBtn">Enviar texto</button>
+        </div>
+
+        <p class="small">
+          Pruebas rápidas: escribe <code>hola</code>, <code>qué hora es</code>, <code>qué fecha es</code> o cualquier frase libre.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Conversación</h2>
+        <div class="conversation" id="conversation"></div>
+      </section>
+    </div>
+
+    <div class="footer">
+      <p class="small">Esta versión mejora los avisos del micrófono y está lista para subirse tal cual a una página web.</p>
+    </div>
+  </div>
+
+  <script>
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+    const statusEl = document.getElementById('status');
+    const textInput = document.getElementById('textInput');
+    const conversation = document.getElementById('conversation');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const sendTextBtn = document.getElementById('sendTextBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const speakLastBtn = document.getElementById('speakLastBtn');
+    const modeSelect = document.getElementById('modeSelect');
+    const voiceSelect = document.getElementById('voiceSelect');
+    const httpsNotice = document.getElementById('httpsNotice');
+
+    let voices = [];
+    let lastAssistantReply = '';
+    let isSecureEnough = window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost';
+
+    function setStatus(text) {
+      statusEl.innerHTML = `<strong>Estado:</strong> ${text}`;
+    }
+
+    function addMessage(role, text) {
+      const div = document.createElement('div');
+      div.className = `msg ${role}`;
+      div.textContent = text;
+      conversation.appendChild(div);
+      conversation.scrollTop = conversation.scrollHeight;
+    }
+
+    function populateVoices() {
+      if (!('speechSynthesis' in window)) return;
+      voices = window.speechSynthesis.getVoices();
+      voiceSelect.innerHTML = '';
+      const esVoices = voices.filter(v => v.lang.toLowerCase().startsWith('es'));
+      const preferred = esVoices.length ? esVoices : voices;
+      preferred.forEach((voice, index) => {
+        const option = document.createElement('option');
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        if (index === 0) option.selected = true;
+        voiceSelect.appendChild(option);
+      });
+    }
+
+    function speak(text) {
+      if (!('speechSynthesis' in window)) {
+        setStatus('tu navegador no soporta voz sintética.');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const selectedVoice = voices.find(v => v.name === voiceSelect.value);
+      if (selectedVoice) utterance.voice = selectedVoice;
+      utterance.lang = (selectedVoice && selectedVoice.lang) ? selectedVoice.lang : 'es-ES';
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function getSimpleReply(input) {
+      const text = input.toLowerCase().trim();
+      const now = new Date();
+
+      if (!text) return 'No he recibido ningún mensaje.';
+      if (/^(hola|buenas|hola\b.*)$/i.test(text)) return 'Hola. Te escucho. Dime qué necesitas.';
+      if (text.includes('qué hora es') || text.includes('que hora es') || text === 'hora') {
+        return `Ahora mismo son las ${now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}.`;
+      }
+      if (text.includes('qué fecha es') || text.includes('que fecha es') || text.includes('qué día es') || text.includes('que dia es') || text === 'fecha') {
+        return `Hoy es ${now.toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}.`;
+      }
+      if (text.includes('ayuda') || text.includes('qué puedes hacer') || text.includes('que puedes hacer')) {
+        return 'Puedo escucharte por voz, leer texto escrito, responder en pantalla y también hablarte. Esta es una base lista para una siguiente versión más inteligente.';
+      }
+      if (text.includes('tu nombre')) {
+        return 'Todavía soy un prototipo simple, pero puedes ponerme el nombre que tú quieras.';
+      }
+      return `He entendido esto: "${input}". Ahora mismo soy un prototipo simple. Si quieres, la siguiente versión la conectamos a una IA real.`;
+    }
+
+    function respondToUser(input) {
+      const cleanInput = input.trim();
+      if (!cleanInput) return;
+      addMessage('user', cleanInput);
+      const reply = getSimpleReply(cleanInput);
+      lastAssistantReply = reply;
+
+      const mode = modeSelect.value;
+      if (mode === 'text' || mode === 'both') addMessage('assistant', reply);
+      if (mode === 'voice' || mode === 'both') speak(reply);
+      setStatus('respuesta generada.');
+    }
+
+    if (recognition) {
+      recognition.lang = 'es-ES';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => setStatus('escuchando... habla ahora.');
+      recognition.onend = () => setStatus('esperando nueva acción.');
+      recognition.onerror = (event) => {
+        const map = {
+          'not-allowed': 'micrófono bloqueado. Tienes que permitirlo en el navegador.',
+          'service-not-allowed': 'servicio de voz no permitido por el navegador.',
+          'network': 'fallo de red del reconocimiento de voz.',
+          'no-speech': 'no se detectó voz.',
+          'audio-capture': 'el navegador no pudo acceder al micrófono.'
+        };
+        setStatus(map[event.error] || `error de voz: ${event.error}`);
+      };
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        textInput.value = transcript;
+        setStatus(`te he entendido: "${transcript}"`);
+        respondToUser(transcript);
+      };
+    } else {
+      setStatus('tu navegador no soporta reconocimiento de voz. Prueba Chrome.');
+      startBtn.disabled = true;
+      stopBtn.disabled = true;
+    }
+
+    if (isSecureEnough) {
+      httpsNotice.classList.add('okbox');
+      httpsNotice.innerHTML = '<strong>Correcto:</strong> esta app se ha abierto en un contexto seguro. El micrófono ya tiene más posibilidades de funcionar.';
+    } else {
+      setStatus('abierto como archivo local. El micrófono puede fallar.');
+    }
+
+    startBtn.addEventListener('click', async () => {
+      if (!recognition) return;
+      if (!isSecureEnough) {
+        setStatus('abre esta app desde una web https. Desde archivo local el micrófono suele fallar en móvil.');
+        return;
+      }
+      try {
+        window.speechSynthesis.cancel();
+        recognition.start();
+      } catch (e) {
+        setStatus('no se pudo iniciar el micrófono. Cierra otras apps o recarga la página.');
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      if (recognition) recognition.stop();
+      window.speechSynthesis.cancel();
+      setStatus('detenido.');
+    });
+
+    sendTextBtn.addEventListener('click', () => respondToUser(textInput.value));
+    textInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        respondToUser(textInput.value);
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      conversation.innerHTML = '';
+      textInput.value = '';
+      lastAssistantReply = '';
+      window.speechSynthesis.cancel();
+      setStatus('historial limpiado.');
+    });
+
+    speakLastBtn.addEventListener('click', () => {
+      if (lastAssistantReply) {
+        speak(lastAssistantReply);
+        setStatus('repitiendo última respuesta.');
+      } else {
+        setStatus('todavía no hay respuesta para repetir.');
+      }
+    });
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = populateVoices;
+      populateVoices();
+    }
+
+    addMessage('assistant', 'Asistente listo. Si quieres usar el micrófono en el móvil, abre esta app desde una web https.');
+  </script>
+</body>
+</html>
