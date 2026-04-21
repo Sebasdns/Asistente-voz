@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Asistente de Voz Móvil</title>
+  <title>Asistente de Voz Móvil - Lector</title>
   <style>
     :root{
       --bg:#0b1020; --panel:#131a2e; --panel2:#1a2340; --text:#eef2ff;
       --muted:#aab4d6; --accent:#4f7cff; --danger:#ef4444; --border:rgba(255,255,255,.08);
-      --warn:#f59e0b; --ok:#22c55e;
+      --ok:#22c55e; --secondary:#273252;
     }
     *{box-sizing:border-box}
     body{
@@ -16,61 +16,97 @@
       background:radial-gradient(circle at top,#182345 0%,var(--bg) 60%);
       min-height:100vh; padding:16px;
     }
-    .app{max-width:920px;margin:0 auto;background:rgba(19,26,46,.92);border:1px solid var(--border);border-radius:24px;overflow:hidden}
+    .app{
+      max-width:980px; margin:0 auto; background:rgba(19,26,46,.92);
+      border:1px solid var(--border); border-radius:24px; overflow:hidden;
+    }
     .header,.footer{padding:20px}
     .grid{display:grid;grid-template-columns:1fr;gap:16px;padding:0 20px 20px}
-    .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:20px;padding:16px}
+    .card{
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      border:1px solid var(--border); border-radius:20px; padding:16px;
+    }
     h1,h2,p{margin-top:0}
     .subtitle,.small{color:var(--muted);line-height:1.5}
-    .status,.notice{padding:12px 14px;border-radius:14px;border:1px solid var(--border);margin-bottom:14px;line-height:1.45}
+    .status,.notice{
+      padding:12px 14px;border-radius:14px;border:1px solid var(--border);margin-bottom:14px;line-height:1.45
+    }
     .status{background:rgba(255,255,255,.04)}
-    .notice{background:rgba(245,158,11,.10);border-color:rgba(245,158,11,.35)}
-    .okbox{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35)}
+    .notice{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.35)}
     .controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
-    button{border:none;background:var(--accent);color:white;padding:12px 16px;border-radius:14px;font-weight:700;cursor:pointer}
-    button.secondary{background:#273252}
+    button{
+      border:none;background:var(--accent);color:white;padding:12px 16px;border-radius:14px;
+      font-weight:700;cursor:pointer
+    }
+    button.secondary{background:var(--secondary)}
     button.danger{background:var(--danger)}
     button:disabled{opacity:.55;cursor:not-allowed}
-    textarea,select,input{width:100%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);border-radius:14px;padding:12px 14px;font:inherit;outline:none}
-    textarea{min-height:110px;resize:vertical}
+    textarea,select,input{
+      width:100%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);
+      border-radius:14px;padding:12px 14px;font:inherit;outline:none
+    }
+    textarea{min-height:180px;resize:vertical}
     .row{display:grid;grid-template-columns:1fr;gap:12px;margin:12px 0}
-    .conversation{max-height:420px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+    .conversation{max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:10px}
     .msg{padding:12px 14px;border-radius:14px;line-height:1.5;border:1px solid var(--border);white-space:pre-wrap}
     .user{align-self:flex-end;background:rgba(79,124,255,.18)}
     .assistant{align-self:flex-start;background:rgba(255,255,255,.05)}
-    code{background:rgba(255,255,255,.07);padding:2px 6px;border-radius:8px}
+    .modebox{
+      display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px
+    }
+    .modeBtn{
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--border);
+      color:var(--text);
+      padding:14px;
+      border-radius:14px;
+      font-weight:700;
+    }
+    .modeBtn.active{
+      background:var(--accent);
+      border-color:transparent;
+    }
+    .hint{
+      font-size:13px;color:var(--muted);margin-top:8px;line-height:1.45;
+    }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="header">
       <h1>Asistente de Voz Móvil</h1>
-      <p class="subtitle">Versión preparada para usar en el teléfono. El micrófono solo funcionará bien cuando abras esta app desde una web segura (https), no desde un archivo local.</p>
+      <p class="subtitle">Ahora tiene dos usos reales: 1) leer en voz alta cualquier texto que pegues y 2) responder con reglas simples como prototipo.</p>
     </div>
 
     <div class="grid">
       <section class="card">
         <h2>Control</h2>
 
-        <div id="httpsNotice" class="notice">
-          <strong>Aviso:</strong> si abres este archivo directamente desde el teléfono, el botón de voz puede no funcionar. Súbelo a una web segura <code>https</code>.
+        <div class="notice">
+          <strong>Modo recomendado para ti:</strong> usa <strong>Leer texto</strong>. Pegas cualquier texto largo y la app te lo lee directamente, sin inventarse otra respuesta.
         </div>
 
         <div class="status" id="status"><strong>Estado:</strong> listo.</div>
 
+        <div class="modebox">
+          <button id="readerModeBtn" class="modeBtn active">📖 Leer texto</button>
+          <button id="assistantModeBtn" class="modeBtn">🤖 Asistente</button>
+        </div>
+
         <div class="controls">
           <button id="startBtn">🎤 Hablar</button>
           <button id="stopBtn" class="secondary">⏹️ Parar</button>
-          <button id="speakLastBtn" class="secondary">🔊 Repetir última respuesta</button>
+          <button id="readTextBtn" class="secondary">🔊 Leer texto pegado</button>
+          <button id="speakLastBtn" class="secondary">🔁 Repetir última salida</button>
           <button id="clearBtn" class="danger">🗑️ Limpiar</button>
         </div>
 
-        <label for="textInput">Escribe aquí si no quieres hablar</label>
-        <textarea id="textInput" placeholder="Escribe tu mensaje..."></textarea>
+        <label for="textInput">Pega aquí tu texto</label>
+        <textarea id="textInput" placeholder="Pega aquí un texto largo y pulsa 'Leer texto pegado'..."></textarea>
 
         <div class="row">
           <div>
-            <label for="modeSelect">Modo de respuesta</label>
+            <label for="modeSelect">Modo de salida</label>
             <select id="modeSelect">
               <option value="both">Texto + voz</option>
               <option value="text">Solo texto</option>
@@ -81,25 +117,34 @@
             <label for="voiceSelect">Voz</label>
             <select id="voiceSelect"></select>
           </div>
+          <div>
+            <label for="rateSelect">Velocidad de lectura</label>
+            <select id="rateSelect">
+              <option value="0.9">Lenta</option>
+              <option value="1" selected>Normal</option>
+              <option value="1.15">Un poco rápida</option>
+              <option value="1.3">Rápida</option>
+            </select>
+          </div>
         </div>
 
         <div class="controls" style="margin-top:14px;">
-          <button id="sendTextBtn">Enviar texto</button>
+          <button id="sendTextBtn">Enviar</button>
         </div>
 
-        <p class="small">
-          Pruebas rápidas: escribe <code>hola</code>, <code>qué hora es</code>, <code>qué fecha es</code> o cualquier frase libre.
+        <p class="hint" id="modeHint">
+          Estás en <strong>Leer texto</strong>: aquí el texto se lee tal cual, sin responder otra cosa.
         </p>
       </section>
 
       <section class="card">
-        <h2>Conversación</h2>
+        <h2>Conversación / salida</h2>
         <div class="conversation" id="conversation"></div>
       </section>
     </div>
 
     <div class="footer">
-      <p class="small">Esta versión mejora los avisos del micrófono y está lista para subirse tal cual a una página web.</p>
+      <p class="small">Si quieres, la siguiente versión la hacemos con IA real. Pero esta ya te sirve para pegar textos y escucharlos en el móvil.</p>
     </div>
   </div>
 
@@ -115,13 +160,17 @@
     const sendTextBtn = document.getElementById('sendTextBtn');
     const clearBtn = document.getElementById('clearBtn');
     const speakLastBtn = document.getElementById('speakLastBtn');
+    const readTextBtn = document.getElementById('readTextBtn');
     const modeSelect = document.getElementById('modeSelect');
     const voiceSelect = document.getElementById('voiceSelect');
-    const httpsNotice = document.getElementById('httpsNotice');
+    const rateSelect = document.getElementById('rateSelect');
+    const readerModeBtn = document.getElementById('readerModeBtn');
+    const assistantModeBtn = document.getElementById('assistantModeBtn');
+    const modeHint = document.getElementById('modeHint');
 
     let voices = [];
-    let lastAssistantReply = '';
-    let isSecureEnough = window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost';
+    let lastOutput = '';
+    let appMode = 'reader';
 
     function setStatus(text) {
       statusEl.innerHTML = `<strong>Estado:</strong> ${text}`;
@@ -133,6 +182,21 @@
       div.textContent = text;
       conversation.appendChild(div);
       conversation.scrollTop = conversation.scrollHeight;
+    }
+
+    function setAppMode(mode) {
+      appMode = mode;
+      const readerActive = mode === 'reader';
+      readerModeBtn.classList.toggle('active', readerActive);
+      assistantModeBtn.classList.toggle('active', !readerActive);
+
+      if (readerActive) {
+        modeHint.innerHTML = 'Estás en <strong>Leer texto</strong>: aquí el texto se lee tal cual, sin responder otra cosa.';
+        setStatus('modo lector activado.');
+      } else {
+        modeHint.innerHTML = 'Estás en <strong>Asistente</strong>: aquí el texto se interpreta con respuestas básicas del prototipo.';
+        setStatus('modo asistente activado.');
+      }
     }
 
     function populateVoices() {
@@ -155,13 +219,20 @@
         setStatus('tu navegador no soporta voz sintética.');
         return;
       }
+      if (!text || !text.trim()) {
+        setStatus('no hay texto para leer.');
+        return;
+      }
+
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       const selectedVoice = voices.find(v => v.name === voiceSelect.value);
       if (selectedVoice) utterance.voice = selectedVoice;
       utterance.lang = (selectedVoice && selectedVoice.lang) ? selectedVoice.lang : 'es-ES';
-      utterance.rate = 1;
+      utterance.rate = Number(rateSelect.value || 1);
       utterance.pitch = 1;
+      utterance.onstart = () => setStatus('leyendo en voz alta...');
+      utterance.onend = () => setStatus('lectura terminada.');
       window.speechSynthesis.speak(utterance);
     }
 
@@ -178,25 +249,47 @@
         return `Hoy es ${now.toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}.`;
       }
       if (text.includes('ayuda') || text.includes('qué puedes hacer') || text.includes('que puedes hacer')) {
-        return 'Puedo escucharte por voz, leer texto escrito, responder en pantalla y también hablarte. Esta es una base lista para una siguiente versión más inteligente.';
+        return 'Puedo leerte texto en voz alta o responder con reglas simples. Si quieres inteligencia real, luego me conectas a una IA.';
       }
-      if (text.includes('tu nombre')) {
-        return 'Todavía soy un prototipo simple, pero puedes ponerme el nombre que tú quieras.';
+      return `He entendido esto: "${input}". Ahora mismo sigo siendo un prototipo simple.`;
+    }
+
+    function readRawText(input) {
+      const cleanInput = input.trim();
+      if (!cleanInput) {
+        setStatus('pega un texto antes de leer.');
+        return;
       }
-      return `He entendido esto: "${input}". Ahora mismo soy un prototipo simple. Si quieres, la siguiente versión la conectamos a una IA real.`;
+
+      lastOutput = cleanInput;
+      addMessage('user', cleanInput);
+
+      const mode = modeSelect.value;
+      if (mode === 'text' || mode === 'both') {
+        addMessage('assistant', cleanInput);
+      }
+      if (mode === 'voice' || mode === 'both') {
+        speak(cleanInput);
+      } else {
+        setStatus('texto preparado.');
+      }
     }
 
     function respondToUser(input) {
       const cleanInput = input.trim();
-      if (!cleanInput) return;
+      if (!cleanInput) {
+        setStatus('escribe algo primero.');
+        return;
+      }
+
       addMessage('user', cleanInput);
       const reply = getSimpleReply(cleanInput);
-      lastAssistantReply = reply;
+      lastOutput = reply;
 
       const mode = modeSelect.value;
       if (mode === 'text' || mode === 'both') addMessage('assistant', reply);
       if (mode === 'voice' || mode === 'both') speak(reply);
-      setStatus('respuesta generada.');
+      else setStatus('respuesta generada.');
     }
 
     if (recognition) {
@@ -220,32 +313,24 @@
         const transcript = event.results[0][0].transcript;
         textInput.value = transcript;
         setStatus(`te he entendido: "${transcript}"`);
-        respondToUser(transcript);
+        if (appMode === 'reader') {
+          readRawText(transcript);
+        } else {
+          respondToUser(transcript);
+        }
       };
     } else {
       setStatus('tu navegador no soporta reconocimiento de voz. Prueba Chrome.');
       startBtn.disabled = true;
-      stopBtn.disabled = true;
     }
 
-    if (isSecureEnough) {
-      httpsNotice.classList.add('okbox');
-      httpsNotice.innerHTML = '<strong>Correcto:</strong> esta app se ha abierto en un contexto seguro. El micrófono ya tiene más posibilidades de funcionar.';
-    } else {
-      setStatus('abierto como archivo local. El micrófono puede fallar.');
-    }
-
-    startBtn.addEventListener('click', async () => {
+    startBtn.addEventListener('click', () => {
       if (!recognition) return;
-      if (!isSecureEnough) {
-        setStatus('abre esta app desde una web https. Desde archivo local el micrófono suele fallar en móvil.');
-        return;
-      }
       try {
         window.speechSynthesis.cancel();
         recognition.start();
       } catch (e) {
-        setStatus('no se pudo iniciar el micrófono. Cierra otras apps o recarga la página.');
+        setStatus('no se pudo iniciar el micrófono. Recarga la página y prueba otra vez.');
       }
     });
 
@@ -255,10 +340,15 @@
       setStatus('detenido.');
     });
 
-    sendTextBtn.addEventListener('click', () => respondToUser(textInput.value));
-    textInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
+    readTextBtn.addEventListener('click', () => {
+      setAppMode('reader');
+      readRawText(textInput.value);
+    });
+
+    sendTextBtn.addEventListener('click', () => {
+      if (appMode === 'reader') {
+        readRawText(textInput.value);
+      } else {
         respondToUser(textInput.value);
       }
     });
@@ -266,26 +356,28 @@
     clearBtn.addEventListener('click', () => {
       conversation.innerHTML = '';
       textInput.value = '';
-      lastAssistantReply = '';
+      lastOutput = '';
       window.speechSynthesis.cancel();
       setStatus('historial limpiado.');
     });
 
     speakLastBtn.addEventListener('click', () => {
-      if (lastAssistantReply) {
-        speak(lastAssistantReply);
-        setStatus('repitiendo última respuesta.');
+      if (lastOutput) {
+        speak(lastOutput);
       } else {
-        setStatus('todavía no hay respuesta para repetir.');
+        setStatus('todavía no hay salida para repetir.');
       }
     });
+
+    readerModeBtn.addEventListener('click', () => setAppMode('reader'));
+    assistantModeBtn.addEventListener('click', () => setAppMode('assistant'));
 
     if ('speechSynthesis' in window) {
       window.speechSynthesis.onvoiceschanged = populateVoices;
       populateVoices();
     }
 
-    addMessage('assistant', 'Asistente listo. Si quieres usar el micrófono en el móvil, abre esta app desde una web https.');
+    addMessage('assistant', 'Asistente listo. Usa “Leer texto” para pegar cualquier contenido y escucharlo tal cual.');
   </script>
 </body>
 </html>
